@@ -2,9 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>Sharpcaster</PackageId>
+    <PackageId>Queuecaster</PackageId>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/RobertK66/SharpCaster/</RepositoryUrl>
+	<PackageVersion>1.0.5</PackageVersion>
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

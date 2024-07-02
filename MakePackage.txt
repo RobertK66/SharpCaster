@@ -1,0 +1,10 @@
+im Sharpcaster Projekt ändern:
+	<PackageId>Queuecaster</PackageId>
+und zusätzlich 
+    <PackageVersion>1.0.4</PackageVersion> 
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+dann einen build machen und nachher in der Package Manager Console mit diesem Befehl aufs NAS freigeben:
+ 
+	 nuget add .\Sharpcaster\bin\Release\Queuecaster.1.0.4.nupkg -source \\nas8bay\MyNugetFee
+
