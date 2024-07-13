@@ -1,4 +1,5 @@
-﻿using Sharpcaster.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Sharpcaster.Interfaces;
 using Sharpcaster.Messages.Connection;
 using System.Threading.Tasks;
 
@@ -12,7 +13,7 @@ namespace Sharpcaster.Channels
         /// <summary>
         /// Initializes a new instance of ConnectionChannel class
         /// </summary>
-        public ConnectionChannel() : base("tp.connection")
+        public ConnectionChannel(ILogger<ConnectionChannel> log = null) : base("tp.connection", log)
         {
         }
 
@@ -38,9 +39,11 @@ namespace Sharpcaster.Channels
         /// <param name="message">message to process</param>
         public async override Task OnMessageReceivedAsync(IMessage message)
         {
-            if (message is CloseMessage)
-            {
-                await Client.DisconnectAsync();
+            if (message is CloseMessage) {
+                // In order to avoid usage deadlocks we need to spawn a new Task here!?
+                _ = Task.Run(async () => {
+                    await Client.DisconnectAsync();
+                });
             }
             await base.OnMessageReceivedAsync(message);
         }

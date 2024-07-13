@@ -1,7 +1,10 @@
-﻿using Sharpcaster.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Sharpcaster.Interfaces;
 using Sharpcaster.Messages.Media;
+using Sharpcaster.Messages.Queue;
 using Sharpcaster.Models.ChromecastStatus;
 using Sharpcaster.Models.Media;
+using Sharpcaster.Models.Queue;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +20,7 @@ namespace Sharpcaster.Channels
         /// <summary>
         /// Initializes a new instance of MediaChannel class
         /// </summary>
-        public MediaChannel() : base("media")
+        public MediaChannel(ILogger<MediaChannel> logger = null) : base("media", logger)
         {
         }
 
@@ -26,12 +29,22 @@ namespace Sharpcaster.Channels
         {
             try
             {
-                return (await SendAsync<MediaStatusMessage>(message, application.TransportId)).Status?.FirstOrDefault();
+                var response = await SendAsync<IMessageWithId>(message, application.TransportId);
+                if (response is LoadFailedMessage)
+                {
+                    throw new Exception("Load failed");
+                }
+                if (response is LoadCancelledMessage)
+                {
+                    throw new Exception("Load cancelled");
+                }
+                return (response as MediaStatusMessage).Status?.FirstOrDefault();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger?.LogError($"Error sending message: {ex.Message}");
                 Status = null;
-                throw;
+                throw ex;
             }
         }
 
@@ -91,5 +104,37 @@ namespace Sharpcaster.Channels
         {
             return await SendAsync(new SeekMessage() { CurrentTime = seconds });
         }
+
+        public async Task<MediaStatus> QueueLoadAsync(QueueItem[] items)
+        {
+            var chromecastStatus = Client.GetChromecastStatus();
+            return (await SendAsync<MediaStatusMessage>(new QueueLoadMessage() { SessionId = chromecastStatus.Applications[0].SessionId, Items = items }, chromecastStatus.Applications[0].TransportId)).Status?.FirstOrDefault();
+        }
+
+        public async Task<MediaStatus> QueueNextAsync(long mediaSessionId)
+        {
+            var chromecastStatus = Client.GetChromecastStatus();
+            return (await SendAsync<MediaStatusMessage>(new QueueNextMessage() { MediaSessionId = mediaSessionId }, chromecastStatus.Applications[0].TransportId)).Status?.FirstOrDefault();
+        }
+
+        public async Task<MediaStatus> QueuePrevAsync(long mediaSessionId)
+        {
+            var chromecastStatus = Client.GetChromecastStatus();
+            return (await SendAsync<MediaStatusMessage>(new QueuePrevMessage() { MediaSessionId = mediaSessionId }, chromecastStatus.Applications[0].TransportId)).Status?.FirstOrDefault();
+        }
+
+
+        public async Task<QueueItem[]> QueueGetItemsAsync(long mediaSessionId, int[] ids = null)
+        {
+            var chromecastStatus = Client.GetChromecastStatus();
+            return (await SendAsync<QueueItemsMessage>(new QueueGetItemsMessage() { MediaSessionId = mediaSessionId, Ids = ids }, chromecastStatus.Applications[0].TransportId)).Items;
+        }
+
+        public async Task<int[]> QueueGetItemIdsAsync(long mediaSessionId)
+        {
+            var chromecastStatus = Client.GetChromecastStatus();
+            return (await SendAsync<QueueItemIdsMessage>(new QueueGetItemIdsMessage() { MediaSessionId = mediaSessionId }, chromecastStatus.Applications[0].TransportId)).Ids;
+        }
+
     }
 }
