@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Sharpcaster.Interfaces;
+using Sharpcaster.Messages;
 using Sharpcaster.Messages.Media;
 using Sharpcaster.Messages.Queue;
 using Sharpcaster.Models.ChromecastStatus;
@@ -85,6 +86,14 @@ namespace Sharpcaster.Channels
 
             return await SendAsync(new PauseMessage());
         }
+
+        public async Task<MediaStatus> GetStatusAsync() {
+            var chromecastStatus = Client.GetChromecastStatus();
+            var message = new Sharpcaster.Messages.Receiver.GetStatusMessage();
+            return await SendAsync(message, chromecastStatus.Applications[0]);
+        }
+
+
 
         /// <summary>
         /// Stops the media

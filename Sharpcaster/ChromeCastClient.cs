@@ -177,7 +177,7 @@ namespace Sharpcaster
                             }
                         } else
                         {
-                            _logger?.LogError($"Couldn't parse the channel from: {castMessage.Namespace}  :  {payload}");
+                            _logger?.LogInformation($"Couldn't parse the channel from: {castMessage.Namespace}  :  {payload}");
                         }
                     }
                 }
@@ -316,7 +316,6 @@ namespace Sharpcaster
 
         public async Task<ChromecastStatus> LaunchApplicationAsync(string applicationId, bool joinExistingApplicationSession = true)
         {
-
             if (joinExistingApplicationSession)
             {
                 var status = GetChromecastStatus();
@@ -324,10 +323,9 @@ namespace Sharpcaster
                 if (runningApplication != null)
                 {
                     await GetChannel<IConnectionChannel>().ConnectAsync(runningApplication.TransportId);
+                    await GetChannel<IMediaChannel>().GetStatusAsync();                 // get a running media Session id if there is one
                     return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
-                } else {
-                    // another AppId is running
-                }
+                } 
             }
             var newApplication = await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
             await GetChannel<IConnectionChannel>().ConnectAsync(newApplication.Applications.First().TransportId);

@@ -5,7 +5,7 @@
     <PackageId>Queuecaster</PackageId>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/RobertK66/SharpCaster/</RepositoryUrl>
-	<PackageVersion>1.0.6</PackageVersion>
+	<PackageVersion>1.0.8</PackageVersion>
 	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
