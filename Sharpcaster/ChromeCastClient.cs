@@ -59,6 +59,7 @@ namespace Sharpcaster
             serviceCollection.AddTransient<IChromecastChannel, HeartbeatChannel>();
             serviceCollection.AddTransient<IChromecastChannel, ReceiverChannel>();
             serviceCollection.AddTransient<IChromecastChannel, MediaChannel>();
+            serviceCollection.AddTransient<IChromecastChannel, MultiZoneChannel>();
             var messageInterfaceType = typeof(IMessage);
             foreach (var type in (from t in typeof(IConnectionChannel).GetTypeInfo().Assembly.GetTypes()
                                   where t.GetTypeInfo().IsClass && !t.GetTypeInfo().IsAbstract && messageInterfaceType.IsAssignableFrom(t) && t.GetTypeInfo().GetCustomAttribute<ReceptionMessageAttribute>() != null
@@ -151,7 +152,7 @@ namespace Sharpcaster
                             {
                                 GetChannel<IHeartbeatChannel>().StopTimeoutTimer();
                             }
-                            channel._logger?.LogTrace($"RECEIVED: {payload}");
+                            channel?._logger?.LogTrace($"RECEIVED: {payload}");
                             
                             var message = JsonConvert.DeserializeObject<MessageWithId>(payload);
                             if (MessageTypes.TryGetValue(message.Type, out Type type))
