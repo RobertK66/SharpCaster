@@ -209,6 +209,8 @@ namespace Sharpcaster
                                                                               {
                                                                                   try
                                                                                   {
+                                                                                      int msgCnt = 0;
+                                                                                      int msgId = 0;
                                                                                       while (true)
                                                                                       {
                                                                                           //First 4 bytes contains the length of the message
@@ -218,7 +220,11 @@ namespace Sharpcaster
                                                                                               Array.Reverse(buffer);
                                                                                           }
                                                                                           var length = BitConverter.ToInt32(buffer, 0);
+                                                                                          _logger?.LogDebug("waiting for {length} bytes.", length);
+
                                                                                           var castMessage = CastMessage.Parser.ParseFrom(await _stream.ReadAsync(length, cancellationToken).ConfigureAwait(false));
+
+                                                                                          _logger?.LogDebug("received {length} bytes. Message {msgCnt}", length, msgCnt);
                                                                                           //Payload can either be Binary or UTF8 json
                                                                                           var payload = (castMessage.PayloadType == PayloadType.Binary ?
                                                                                               Encoding.UTF8.GetString(castMessage.PayloadBinary.ToByteArray()) : castMessage.PayloadUtf8);
@@ -235,35 +241,35 @@ namespace Sharpcaster
                                                                                               var message = JsonSerializer.Deserialize(payload, SharpcasteSerializationContext.Default.MessageWithId);
                                                                                               if (message != null && MessageTypes.TryGetValue(message.Type, out Type type))
                                                                                               {
-                                                                                                  try
-                                                                                                  {
-                                                                                                      if (channel != null)
+                                                                                                  msgId = message.RequestId;
+                                                                                                  _ = Task.Run(async () => {
+                                                                                                      try {
+                                                                                                      if (channel != null) {
                                                                                                           await channel.OnMessageReceivedAsync(payload, message.Type).ConfigureAwait(false);
-                                                                                                      if (message.HasRequestId)
-                                                                                                      {
-                                                                                                          WaitingTasks.TryRemove(message.RequestId, out SharpCasterTaskCompletionSource? tcs);
-                                                                                                          tcs?.SetResult(payload);
-                                                                                                          if (tcs == null)
-                                                                                                              if (_logger != null) LogNoTaskCompletionSource(_logger, message.RequestId, WaitingTasks.Count, message.Type, null);
                                                                                                       }
-                                                                                                  }
-                                                                                                  catch (Exception ex)
-                                                                                                  {
-                                                                                                      if (_logger != null) LogExceptionProcessingResponse(_logger, ex.Message, ex);
-                                                                                                      if (message.HasRequestId)
-                                                                                                      {
-                                                                                                          WaitingTasks.TryRemove(message.RequestId, out SharpCasterTaskCompletionSource? tcs);
-                                                                                                          tcs?.SetException(ex);
+                                                                                                      if (message.HasRequestId) {
+                                                                                                              WaitingTasks.TryRemove(message.RequestId, out SharpCasterTaskCompletionSource? tcs);
+                                                                                                              tcs?.SetResult(payload);
+                                                                                                              if (tcs == null)
+                                                                                                                  if (_logger != null) LogNoTaskCompletionSource(_logger, message.RequestId, WaitingTasks.Count, message.Type, null);
+                                                                                                          }
+                                                                                                      } catch (Exception ex) {
+                                                                                                          if (_logger != null) LogExceptionProcessingResponse(_logger, ex.Message, ex);
+                                                                                                          if (message.HasRequestId) {
+                                                                                                              WaitingTasks.TryRemove(message.RequestId, out SharpCasterTaskCompletionSource? tcs);
+                                                                                                              tcs?.SetException(ex);
+                                                                                                          }
                                                                                                       }
-                                                                                                  }
+                                                                                                  });
                                                                                               }
                                                                                               else
                                                                                               {
                                                                                                   if (_logger != null) LogMessageConversionError(_logger, message.Type, null);
                                                                                                   Debugger.Break();
                                                                                               }
-                                                                                          }
-                                                                                          else
+                                                                                              _logger?.LogDebug("processed message {cnt} with id {} ({length} bytes).", msgCnt,msgId, length);
+                                                                                              msgCnt++;
+                                                                                          } else
                                                                                           {
                                                                                               if (_logger != null) LogChannelParseError(_logger, castMessage.Namespace, payload, null);
                                                                                           }
@@ -283,11 +289,16 @@ namespace Sharpcaster
             await SendAsync(logger, castMessage).ConfigureAwait(false);
         }
 
+
+        static int sendCnt = 0;
         private async Task SendAsync(ILogger? logger, CastMessage castMessage)
         {
+            sendCnt++;
+            logger?.LogDebug("sendasync waiting for semaphore for message sencnt:{cnt}", sendCnt);
             await SendSemaphoreSlim.WaitAsync().ConfigureAwait(false);
-            try
-            {
+            logger?.LogDebug("sendasync got semaphore for message  sencnt:{cnt}", sendCnt);
+
+            try {
                 if (logger != null) LogSentMessage(logger, castMessage.Namespace, castMessage.DestinationId, castMessage.PayloadUtf8, null);
 #if NETSTANDARD2_0
                 byte[] message = castMessage.ToProto();
@@ -304,6 +315,8 @@ namespace Sharpcaster
             finally
             {
                 SendSemaphoreSlim.Release();
+                logger?.LogDebug("sendasync released message  sencnt:{cnt}", sendCnt);
+
             }
         }
 
@@ -316,10 +329,13 @@ namespace Sharpcaster
 
         public async Task<string> SendAsync(ILogger? logger, string ns, int messageRequestId, string messagePayload, string destinationId)
         {
+            _logger?.LogDebug("sending {msgid} and wait for answer.", messageRequestId);
             var taskCompletionSource = new SharpCasterTaskCompletionSource();
             WaitingTasks[messageRequestId] = taskCompletionSource;
             await SendAsync(logger, ns, messagePayload, destinationId).ConfigureAwait(false);
-            return await taskCompletionSource.Task.TimeoutAfter(RECEIVE_TIMEOUT).ConfigureAwait(false);
+            var ret = await taskCompletionSource.Task.TimeoutAfter(RECEIVE_TIMEOUT).ConfigureAwait(false);
+            _logger?.LogDebug("sent {msgid}, answer received.", messageRequestId);
+            return ret;
         }
 
         public async Task<string> WaitResponseAsync(int messageRequestId)
