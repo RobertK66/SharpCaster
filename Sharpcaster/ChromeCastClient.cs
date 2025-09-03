@@ -221,8 +221,8 @@ namespace Sharpcaster
                     var length = BitConverter.ToInt32(buffer, 0);
                     var castMessage = CastMessage.Parser.ParseFrom(await _stream!.ReadAsync(length, cancellationToken).ConfigureAwait(false));
                     //Payload can either be Binary or UTF8 json
-                    var payload = (castMessage.PayloadType == PayloadType.Binary ?
-                        Encoding.UTF8.GetString(castMessage.PayloadBinary.ToByteArray()) : castMessage.PayloadUtf8);
+                    var payload = ( castMessage.PayloadType == PayloadType.Binary ?
+                        Encoding.UTF8.GetString(castMessage.PayloadBinary.ToByteArray()) : castMessage.PayloadUtf8 );
 
                     var channel = Channels.FirstOrDefault(c => c.Namespace == castMessage.Namespace);
                     if (channel != null)
@@ -303,9 +303,9 @@ namespace Sharpcaster
                 if (_stream != null)
                 {
 #if NETSTANDARD2_0
-                await _stream.WriteAsync(message, 0, message.Length);
+                    await _stream.WriteAsync(message, 0, message.Length);
 #else
-                await _stream.WriteAsync(message).ConfigureAwait(false);
+                    await _stream.WriteAsync(message).ConfigureAwait(false);
 #endif
                 }
             }

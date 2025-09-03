@@ -6,13 +6,37 @@ using System.Threading.Tasks;
 
 namespace Sharpcaster.Extensions
 {
+
+<<<<<<< TODO: Unmerged change from project 'Sharpcaster (netstandard2.0)', Before:
+    public static async Task<byte[]> ReadAsync(this SslStream stream, int bufferLength, CancellationToken cancellationToken = default)
+    {
+        var buffer = new byte[bufferLength];
+=======
     public static class StreamExtensions
+        {
+        public static async Task<byte[]> ReadAsync(this SslStream stream, int bufferLength, CancellationToken cancellationToken = default)
+            {
+            var buffer = new byte[bufferLength];
+>>>>>>> After
+    public static class StreamExtensions
+
+<<<<<<< TODO: Unmerged change from project 'Sharpcaster (netstandard2.0)', Before:
     {
         public static async Task<byte[]> ReadAsync(this SslStream stream, int bufferLength, CancellationToken cancellationToken = default)
         {
             var buffer = new byte[bufferLength];
+=======
+    {
+        public static async Task<byte[]> ReadAsync(this SslStream stream, int bufferLength, CancellationToken cancellationToken = default)
+        {
+            var buffer = new byte[bufferLength];
+>>>>>>> After
+            {
+        public static async Task<byte[]> ReadAsync(this SslStream stream, int bufferLength, CancellationToken cancellationToken = default)
+        {
+            var buffer = new byte[bufferLength];
 
-            #if NETSTANDARD2_0
+#if NETSTANDARD2_0
             int bytesRead, totalBytesRead = 0;
             if (stream == null)
             {
@@ -27,10 +51,10 @@ namespace Sharpcaster.Extensions
                 }
                 totalBytesRead += bytesRead;
             }
-            #else
+#else
             ArgumentNullException.ThrowIfNull(stream);
             await stream.ReadExactlyAsync(buffer.AsMemory(0, bufferLength), cancellationToken).ConfigureAwait(false);
-            #endif
+#endif
             return buffer;
         }
     }

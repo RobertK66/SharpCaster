@@ -83,15 +83,15 @@ namespace Sharpcaster.Models.Media
         public static CastColor FromHsl(double hue, double saturation, double lightness, double alpha = 1.0)
         {
             // Normalize values
-            hue = ((hue % 360) + 360) % 360; // Ensure 0-360
+            hue = ( ( hue % 360 ) + 360 ) % 360; // Ensure 0-360
             saturation = Math.Max(0, Math.Min(100, saturation)) / 100.0;
             lightness = Math.Max(0, Math.Min(100, lightness)) / 100.0;
             alpha = Math.Max(0, Math.Min(1, alpha));
 
             // Convert HSL to RGB
             var (r, g, b) = HslToRgb(hue, saturation, lightness);
-            
-            return FromRgba(r, g, b, (byte)(alpha * 255));
+
+            return FromRgba(r, g, b, (byte)( alpha * 255 ));
         }
 
         private static (byte r, byte g, byte b) HslToRgb(double h, double s, double l)
@@ -105,25 +105,25 @@ namespace Sharpcaster.Models.Media
             else
             {
 
-                var q = l < 0.5 ? l * (1 + s) : l + s - (l * s);
-                var p = (2 * l) - q;
+                var q = l < 0.5 ? l * ( 1 + s ) : l + s - ( l * s );
+                var p = ( 2 * l ) - q;
                 var hNorm = h / 360.0;
-                
-                r = Hue2rgb(p, q, hNorm + (1.0 / 3));
+
+                r = Hue2rgb(p, q, hNorm + ( 1.0 / 3 ));
                 g = Hue2rgb(p, q, hNorm);
-                b = Hue2rgb(p, q, hNorm - (1.0 / 3));
+                b = Hue2rgb(p, q, hNorm - ( 1.0 / 3 ));
             }
 
-            return ((byte)(r * 255), (byte)(g * 255), (byte)(b * 255));
+            return ((byte)( r * 255 ), (byte)( g * 255 ), (byte)( b * 255 ));
         }
 
         private static double Hue2rgb(double p, double q, double t)
         {
             if (t < 0) t++;
             if (t > 1) t--;
-            if (t < 1.0 / 6) return p + ((q - p) * 6 * t);
+            if (t < 1.0 / 6) return p + ( ( q - p ) * 6 * t );
             if (t < 1.0 / 2) return q;
-            if (t < 2.0 / 3) return p + ((q - p) * ((2.0 / 3) - t) * 6);
+            if (t < 2.0 / 3) return p + ( ( q - p ) * ( ( 2.0 / 3 ) - t ) * 6 );
             return p;
         }
 

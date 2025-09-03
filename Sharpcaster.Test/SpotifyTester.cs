@@ -8,18 +8,14 @@ using System.Net;
 using System.Text.Json.Nodes;
 using System.Net.Http.Json;
 
-namespace Sharpcaster.Test
-{
-    public class SpotifyTester(ITestOutputHelper outputHelper, ChromecastDevicesFixture fixture)
-    {
+namespace Sharpcaster.Test {
+    public class SpotifyTester(ITestOutputHelper outputHelper, ChromecastDevicesFixture fixture) {
         [Fact]
-        public async ValueTask TestChromecastGetInfo()
-        {
+        public async ValueTask TestChromecastGetInfo() {
             var TestHelper = new TestHelper();
             var SpotifyStatusUpdated = false;
             ChromecastClient client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture, "CC32E753");
-            client.GetChannel<SpotifyChannel>().SpotifyStatusUpdated += (sender, status) =>
-            {
+            client.GetChannel<SpotifyChannel>().SpotifyStatusUpdated += (sender, status) => {
                 outputHelper.WriteLine("ClientId: " + status.ClientID);
                 SpotifyStatusUpdated = true;
             };
@@ -31,8 +27,7 @@ namespace Sharpcaster.Test
         }
 
         [Fact(Skip = "requires clientid and deviceid")]
-        public async ValueTask TestChromecastWholeFlow()
-        {
+        public async ValueTask TestChromecastWholeFlow() {
             var TestHelper = new TestHelper();
             var SpotifyStatusUpdated = false;
             var UserAddedToChromecast = false;
@@ -41,8 +36,7 @@ namespace Sharpcaster.Test
 
             var spotifyAccessToken = await GetSpotifyAccessToken();
             ChromecastClient client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture, "CC32E753");
-            client.GetChannel<SpotifyChannel>().SpotifyStatusUpdated += async (sender, status) =>
-            {
+            client.GetChannel<SpotifyChannel>().SpotifyStatusUpdated += async (sender, status) => {
                 spotifyClientId = status.ClientID;
                 spotifyDeviceId = client.GetChannel<SpotifyChannel>().SpotifyDeviceId;
                 var spotifyAccessTokenForChromecast = await GetSpotifyAccessTokenForChromecast(spotifyAccessToken, spotifyClientId, spotifyDeviceId);
@@ -50,8 +44,7 @@ namespace Sharpcaster.Test
                 SpotifyStatusUpdated = true;
             };
 
-            client.GetChannel<SpotifyChannel>().AddUserResponseReceived += (sender, e) =>
-            {
+            client.GetChannel<SpotifyChannel>().AddUserResponseReceived += (sender, e) => {
                 outputHelper.WriteLine("AddUserResponseReceived: " + e.StatusString);
                 UserAddedToChromecast = true;
             };
@@ -62,13 +55,11 @@ namespace Sharpcaster.Test
             Assert.True(UserAddedToChromecast);
         }
 
-        public async Task<string> GetSpotifyAccessToken()
-        {
+        public async Task<string> GetSpotifyAccessToken() {
             var baseAddress = new Uri("https://open.spotify.com");
             var cookieContainer = new CookieContainer();
             using (var handler = new HttpClientHandler() { CookieContainer = cookieContainer })
-            using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
-            {
+            using (var client = new HttpClient(handler) { BaseAddress = baseAddress }) {
                 cookieContainer.Add(baseAddress, new Cookie("sp_dc", ""));
                 cookieContainer.Add(baseAddress, new Cookie("sp_key", ""));
                 client.DefaultRequestHeaders.Add("user-agent",
@@ -82,19 +73,16 @@ namespace Sharpcaster.Test
             }
         }
 
-        public async Task<string> GetSpotifyAccessTokenForChromecast(string originalAccessToken, string clientId, string deviceId)
-        {
+        public async Task<string> GetSpotifyAccessTokenForChromecast(string originalAccessToken, string clientId, string deviceId) {
             var baseAddress = new Uri("https://spclient.wg.spotify.com");
             var cookieContainer = new CookieContainer();
             using (var handler = new HttpClientHandler() { CookieContainer = cookieContainer })
-            using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
-            {
+            using (var client = new HttpClient(handler) { BaseAddress = baseAddress }) {
                 client.DefaultRequestHeaders.Add(
                     "authority", "spclient.wg.spotify.com");
                 client.DefaultRequestHeaders.Add(
                     "authorization", "Bearer " + originalAccessToken);
-                var jsonContent = JsonContent.Create(new
-                {
+                var jsonContent = JsonContent.Create(new {
                     clientId,
                     deviceId
                 });

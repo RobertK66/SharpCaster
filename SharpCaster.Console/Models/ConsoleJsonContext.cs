@@ -4,6 +4,5 @@ namespace SharpCaster.Console.Models;
 
 [JsonSerializable(typeof(CommandLineArgs))]
 [JsonSerializable(typeof(ApplicationState))]
-public partial class ConsoleJsonContext : JsonSerializerContext
-{
+public partial class ConsoleJsonContext : JsonSerializerContext {
 }

@@ -4,13 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Sharpcaster.Test
-{
-    public class MemoryAllocationTester(ChromecastDevicesFixture fixture)
-    {
+namespace Sharpcaster.Test {
+    public class MemoryAllocationTester(ChromecastDevicesFixture fixture) {
         [Fact]
-        public async Task ConnectToChromecastAndLaunchApplication()
-        {
+        public async Task ConnectToChromecastAndLaunchApplication() {
             long memoryBefore = GC.GetTotalMemory(true);
             var TestHelper = new TestHelper();
             var client = new ChromecastClient();
@@ -29,8 +26,7 @@ namespace Sharpcaster.Test
             var memoryInfo = GC.GetGCMemoryInfo();
             var generations = memoryInfo.GenerationInfo;
 
-            for (int i = 0; i < generations.Length; i++)
-            {
+            for (int i = 0; i < generations.Length; i++) {
                 Console.WriteLine($"Generation {i}:");
                 Console.WriteLine($"  Size Before GC: {generations[i].SizeBeforeBytes / (1024.0 * 1024.0):F2} MB");
                 Console.WriteLine($"  Size After GC: {generations[i].SizeAfterBytes / (1024.0 * 1024.0):F2} MB");

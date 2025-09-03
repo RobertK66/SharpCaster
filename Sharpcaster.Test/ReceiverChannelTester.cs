@@ -4,13 +4,10 @@ using Sharpcaster.Test.helper;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Sharpcaster.Test
-{
-    public class ReceiverChannelTester(ITestOutputHelper outputHelper, ChromecastDevicesFixture fixture)
-    {
+namespace Sharpcaster.Test {
+    public class ReceiverChannelTester(ITestOutputHelper outputHelper, ChromecastDevicesFixture fixture) {
         [Fact]
-        public async Task TestMute()
-        {
+        public async Task TestMute() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateAndConnectClient(outputHelper, fixture);
 
@@ -20,8 +17,7 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestUnMute()
-        {
+        public async Task TestUnMute() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateAndConnectClient(outputHelper, fixture);
 
@@ -30,17 +26,14 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestVolume()
-        {
+        public async Task TestVolume() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture);
-            
-            var media = new Media
-            {
+
+            var media = new Media {
                 ContentUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/DesigningForGoogleCast.mp4",
                 ContentType = "video/mp4",
-                Metadata = new MediaMetadata
-                {
+                Metadata = new MediaMetadata {
                     Title = "Designing for Google Cast",
                     Images = new[]
                     {
@@ -66,8 +59,7 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestStoppingApplication()
-        {
+        public async Task TestStoppingApplication() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateAndConnectClient(outputHelper, fixture);
 
@@ -78,15 +70,13 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestApplicationLaunchStatusMessage()
-        {
+        public async Task TestApplicationLaunchStatusMessage() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateAndConnectClient(outputHelper, fixture);
 
             string launchStatus = "";
 
-            client.ReceiverChannel.LaunchStatusChanged += (sender, e) =>
-            {
+            client.ReceiverChannel.LaunchStatusChanged += (sender, e) => {
                 launchStatus = e.Status;
             };
 

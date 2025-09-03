@@ -405,7 +405,7 @@ namespace Extensions.Api.CastChannel
         public void MergeFrom(pb::CodedInputStream input)
         {
             uint tag;
-            while ((tag = input.ReadTag()) != 0)
+            while (( tag = input.ReadTag() ) != 0)
             {
                 switch (tag)
                 {
@@ -663,7 +663,7 @@ namespace Extensions.Api.CastChannel
         public void MergeFrom(pb::CodedInputStream input)
         {
             uint tag;
-            while ((tag = input.ReadTag()) != 0)
+            while (( tag = input.ReadTag() ) != 0)
             {
                 switch (tag)
                 {
@@ -975,7 +975,7 @@ namespace Extensions.Api.CastChannel
         public void MergeFrom(pb::CodedInputStream input)
         {
             uint tag;
-            while ((tag = input.ReadTag()) != 0)
+            while (( tag = input.ReadTag() ) != 0)
             {
                 switch (tag)
                 {
@@ -1144,7 +1144,7 @@ namespace Extensions.Api.CastChannel
         public void MergeFrom(pb::CodedInputStream input)
         {
             uint tag;
-            while ((tag = input.ReadTag()) != 0)
+            while (( tag = input.ReadTag() ) != 0)
             {
                 switch (tag)
                 {
@@ -1379,7 +1379,7 @@ namespace Extensions.Api.CastChannel
         public void MergeFrom(pb::CodedInputStream input)
         {
             uint tag;
-            while ((tag = input.ReadTag()) != 0)
+            while (( tag = input.ReadTag() ) != 0)
             {
                 switch (tag)
                 {

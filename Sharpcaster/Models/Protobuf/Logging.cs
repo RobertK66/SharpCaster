@@ -767,7 +767,7 @@ namespace Sharpcaster.Models.Protobuf
         public void MergeFrom(pb::CodedInputStream input)
         {
             uint tag;
-            while ((tag = input.ReadTag()) != 0)
+            while (( tag = input.ReadTag() ) != 0)
             {
                 switch (tag)
                 {
@@ -1096,7 +1096,7 @@ namespace Sharpcaster.Models.Protobuf
         public void MergeFrom(pb::CodedInputStream input)
         {
             uint tag;
-            while ((tag = input.ReadTag()) != 0)
+            while (( tag = input.ReadTag() ) != 0)
             {
                 switch (tag)
                 {
@@ -1317,7 +1317,7 @@ namespace Sharpcaster.Models.Protobuf
         public void MergeFrom(pb::CodedInputStream input)
         {
             uint tag;
-            while ((tag = input.ReadTag()) != 0)
+            while (( tag = input.ReadTag() ) != 0)
             {
                 switch (tag)
                 {

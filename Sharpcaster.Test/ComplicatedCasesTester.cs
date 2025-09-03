@@ -8,23 +8,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Sharpcaster.Test
-{
+namespace Sharpcaster.Test {
 
-    public class ComplicatedCasesTester(ITestOutputHelper outputHelper, ChromecastDevicesFixture fixture)
-    {
+    public class ComplicatedCasesTester(ITestOutputHelper outputHelper, ChromecastDevicesFixture fixture) {
         [Fact]
-        public async Task TestingVolumeRelatedIssue()
-        {
+        public async Task TestingVolumeRelatedIssue() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture);
 
-            var media = new Media
-            {
+            var media = new Media {
                 ContentUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/DesigningForGoogleCast.mp4",
                 ContentType = "video/mp4",
-                Metadata = new MediaMetadata
-                {
+                Metadata = new MediaMetadata {
                     Title = "Designing for Google Cast",
                     Images = new[]
                     {
@@ -73,17 +68,14 @@ namespace Sharpcaster.Test
 
         }
         [Fact]
-        public async Task TestingVolumeRelatedIssueWithMp3()
-        {
+        public async Task TestingVolumeRelatedIssueWithMp3() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture);
 
-            var media = new Media
-            {
+            var media = new Media {
                 ContentUrl = "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Arcane.mp3",
                 ContentType = "audio/mpeg",
-                Metadata = new MusicTrackMetadata
-                {
+                Metadata = new MusicTrackMetadata {
                     Title = "Arcane",
                 },
             };
@@ -126,18 +118,15 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestingWithSwitchingRunningApplication()
-        {
+        public async Task TestingWithSwitchingRunningApplication() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture);
 
-            var media = new Media
-            {
+            var media = new Media {
                 ContentUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/DesigningForGoogleCast.mp4",
                 ContentType = "video/mp4",
                 StreamType = StreamType.Buffered,
-                Metadata = new MediaMetadata
-                {
+                Metadata = new MediaMetadata {
                     Title = "Designing for Google Cast",
                     Images = new[]
                     {
@@ -185,19 +174,17 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestLaunchingFirstDifferentApplicationAndThenLaunchingDifferentWithoutDisconnect()
-        {
+        public async Task TestLaunchingFirstDifferentApplicationAndThenLaunchingDifferentWithoutDisconnect() {
             var TestHelper = new TestHelper();
             //This will start the default receiver application (B3419EF5)
             var client = await TestHelper.CreateAndConnectClient(outputHelper, fixture);
             await client.LaunchApplicationAsync("B3419EF5");
 
             //This should cause issues
-            try { 
+            try {
                 await client.LaunchApplicationAsync("CC1AD845", false);
                 Assert.Fail("Expected exception was not thrown.");
-            } catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Assert.IsType<TaskCanceledException>(ex);
                 Assert.Contains("Client disconnected before receiving response.", ex.Message);
             }
@@ -206,8 +193,7 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestLaunchingFirstDifferentApplicationAndThenLaunchingDifferentWithDisconnect()
-        {
+        public async Task TestLaunchingFirstDifferentApplicationAndThenLaunchingDifferentWithDisconnect() {
             var TestHelper = new TestHelper();
             //This will start the default receiver application (B3419EF5)
             var client = await TestHelper.CreateAndConnectClient(outputHelper, fixture);
@@ -217,19 +203,15 @@ namespace Sharpcaster.Test
             client = await TestHelper.CreateAndConnectClient(outputHelper, fixture);
 
             //This should work fine with disconnect
-            try
-            {
+            try {
                 await client.LaunchApplicationAsync("CC1AD845", false);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Assert.Fail("Expected exception was not thrown.");
             }
         }
 
         [Fact]
-        public async Task TestSlowStatusHandlerAsync()
-        {
+        public async Task TestSlowStatusHandlerAsync() {
             var TestHelper = new TestHelper();
             ChromecastClient client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture.Receivers[0]);
 
@@ -238,8 +220,7 @@ namespace Sharpcaster.Test
                 await Task.Delay(10000);
             };
 
-            var media = new Media
-            {
+            var media = new Media {
                 ContentUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/DesigningForGoogleCast.mp4"
             };
 
@@ -258,13 +239,11 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestWaiting10SecondsAfterConnect()
-        {
+        public async Task TestWaiting10SecondsAfterConnect() {
             var TestHelper = new TestHelper();
             ChromecastClient client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture.Receivers[0]);
 
-            var media = new Media
-            {
+            var media = new Media {
                 ContentUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/DesigningForGoogleCast.mp4"
             };
 

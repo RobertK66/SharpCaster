@@ -7,29 +7,24 @@ using Sharpcaster.Models.Media;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Sharpcaster.Test
-{
-    public class ChromecastConnectionTester(ITestOutputHelper outputHelper, ChromecastDevicesFixture fixture)
-    {
+namespace Sharpcaster.Test {
+    public class ChromecastConnectionTester(ITestOutputHelper outputHelper, ChromecastDevicesFixture fixture) {
         [Fact]
-        public async Task SearchChromecastsAndConnectToIt()
-        {
+        public async Task SearchChromecastsAndConnectToIt() {
             var TestHelper = new TestHelper();
             var status = await TestHelper.CreateAndConnectClient(outputHelper, fixture.Receivers[0]);
             Assert.NotNull(status);
         }
 
         [Fact(Skip = "Test needs manuell interactions -> skipped for autotestings")]
-        public async Task SearchChromecastsAndConnectToItThenWaitForItToShutdown()
-        {
+        public async Task SearchChromecastsAndConnectToItThenWaitForItToShutdown() {
             var TestHelper = new TestHelper();
             var client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture.Receivers[0]);
 
             Assert.NotNull(client.ChromecastStatus);
             AutoResetEvent _autoResetEvent = new(false);
 
-            client.Disconnected += (sender, args) =>
-            {
+            client.Disconnected += (sender, args) => {
                 outputHelper.WriteLine("Chromecast did shutdown");
                 _autoResetEvent.Set();
             };
@@ -41,8 +36,7 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestingHeartBeat()
-        {
+        public async Task TestingHeartBeat() {
             var TestHelper = new TestHelper();
             ChromecastClient client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture.Receivers[0]);
             AutoResetEvent _autoResetEvent = new(false);
@@ -51,8 +45,7 @@ namespace Sharpcaster.Test
             //Then we are going to pause and play it quite many times
             //During this heartbeat timeout would have been triggered without previous fix
 
-            var media = new Media
-            {
+            var media = new Media {
                 ContentUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/DesigningForGoogleCast.mp4"
             };
 
@@ -63,8 +56,7 @@ namespace Sharpcaster.Test
             int commandsToRun = 10;
 
             //We are setting up an event to listen to status change. Because we don't know when the video has started to play
-            client.MediaChannel.StatusChanged += (object sender, MediaStatus e) =>
-            {
+            client.MediaChannel.StatusChanged += (object sender, MediaStatus e) => {
                 _autoResetEvent.Set();
             };
 
@@ -72,17 +64,13 @@ namespace Sharpcaster.Test
 
             _autoResetEvent.WaitOne(3000);
 
-            for (int i = 0; i < commandsToRun; i++)
-            {
-                if (i % 2 == 0)
-                {
+            for (int i = 0; i < commandsToRun; i++) {
+                if (i % 2 == 0) {
                     await Task.Delay(1000, Xunit.TestContext.Current.CancellationToken);
                     mediaStatus = await client.MediaChannel.PauseAsync();
                     Assert.Equal(PlayerStateType.Paused, mediaStatus.PlayerState);
                     runSequence += pause;
-                }
-                else
-                {
+                } else {
                     await Task.Delay(1000, Xunit.TestContext.Current.CancellationToken);
                     mediaStatus = await client.MediaChannel.PlayAsync();
                     Assert.Equal(PlayerStateType.Playing, mediaStatus.PlayerState);
@@ -96,13 +84,11 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public async Task TestHeartbeatWithLongDelaysAndMediaControl()
-        {
+        public async Task TestHeartbeatWithLongDelaysAndMediaControl() {
             var TestHelper = new TestHelper();
             ChromecastClient client = await TestHelper.CreateConnectAndLoadAppClient(outputHelper, fixture.Receivers[0]);
 
-            var media = new Media
-            {
+            var media = new Media {
                 ContentUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/DesigningForGoogleCast.mp4"
             };
 

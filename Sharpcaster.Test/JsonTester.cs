@@ -8,13 +8,10 @@ using System.Text.Json;
 using Xunit;
 using Sharpcaster.Messages.Receiver;
 
-namespace Sharpcaster.Test
-{
-    public class JsonTester()
-    {
+namespace Sharpcaster.Test {
+    public class JsonTester() {
         [Fact]
-        public void TestConnectMessage()
-        {
+        public void TestConnectMessage() {
             IMessage connectMessage = new ConnectMessage();
             var requestId = (connectMessage as IMessageWithId).RequestId;
 
@@ -23,8 +20,7 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public void TestSpotifyMediaChannelMessage()
-        {
+        public void TestSpotifyMediaChannelMessage() {
             const string spotifyMessageJson = """
             {
                 "type": "MEDIA_STATUS",
@@ -127,8 +123,7 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public void TestMediaStatusWithGermanUmlautTitle()
-        {
+        public void TestMediaStatusWithGermanUmlautTitle() {
             // Test parsing a MEDIA_STATUS message with German umlaut characters in the title
             var mediaStatusJson = """
             {

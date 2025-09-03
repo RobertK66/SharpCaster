@@ -2,48 +2,40 @@ using Sharpcaster.Models.Media;
 using System;
 using Xunit;
 
-namespace Sharpcaster.Test
-{
-    public class CastColorTester
-    {
+namespace Sharpcaster.Test {
+    public class CastColorTester {
         [Fact]
-        public void TestCastColorFromRgb()
-        {
+        public void TestCastColorFromRgb() {
             var color = CastColor.FromRgb(255, 0, 0);
             Assert.Equal("#FF0000FF", color.ToString());
         }
 
         [Fact]
-        public void TestCastColorFromRgba()
-        {
+        public void TestCastColorFromRgba() {
             var color = CastColor.FromRgba(255, 0, 0, 128);
             Assert.Equal("#FF000080", color.ToString());
         }
 
         [Fact]
-        public void TestCastColorFromHex()
-        {
+        public void TestCastColorFromHex() {
             var color = CastColor.FromHex("#00FF00");
             Assert.Equal("#00FF00FF", color.ToString());
         }
 
         [Fact]
-        public void TestCastColorFromHexWithAlpha()
-        {
+        public void TestCastColorFromHexWithAlpha() {
             var color = CastColor.FromHex("#00FF0080");
             Assert.Equal("#00FF0080", color.ToString());
         }
 
         [Fact]
-        public void TestCastColorFromHsl()
-        {
+        public void TestCastColorFromHsl() {
             var color = CastColor.FromHsl(120, 100, 50); // Pure green
             Assert.Equal("#00FF00FF", color.ToString());
         }
 
         [Fact]
-        public void TestCastColorPredefinedColors()
-        {
+        public void TestCastColorPredefinedColors() {
             Assert.Equal("#FF0000FF", CastColors.Red.ToString());
             Assert.Equal("#00FF00FF", CastColors.Green.ToString());
             Assert.Equal("#0000FFFF", CastColors.Blue.ToString());
@@ -53,25 +45,21 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public void TestCastColorImplicitConversion()
-        {
+        public void TestCastColorImplicitConversion() {
             CastColor color = "#FF00FF";
             Assert.Equal("#FF00FFFF", color.ToString());
         }
 
         [Fact]
-        public void TestCastColorEquality()
-        {
+        public void TestCastColorEquality() {
             var color1 = CastColor.FromRgb(255, 0, 0);
             var color2 = CastColor.FromHex("#FF0000");
             Assert.Equal(color1, color2);
         }
 
         [Fact]
-        public void TestTextTrackStyleWithCastColor()
-        {
-            var style = new TextTrackStyle
-            {
+        public void TestTextTrackStyleWithCastColor() {
+            var style = new TextTrackStyle {
                 EdgeColor = CastColors.Green,
                 ForegroundColor = CastColor.FromRgb(255, 255, 255),
                 BackgroundColor = CastColor.FromRgba(0, 0, 0, 128),
@@ -85,8 +73,7 @@ namespace Sharpcaster.Test
         }
 
         [Fact]
-        public void TestInvalidHexColor()
-        {
+        public void TestInvalidHexColor() {
             Assert.Throws<ArgumentException>(() => CastColor.FromHex("invalid"));
             Assert.Throws<ArgumentException>(() => CastColor.FromHex("#GG0000"));
             Assert.Throws<ArgumentException>(() => CastColor.FromHex("#FF00"));

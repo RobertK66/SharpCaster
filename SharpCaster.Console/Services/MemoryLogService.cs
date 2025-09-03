@@ -3,20 +3,16 @@ using System.Collections.Concurrent;
 
 namespace SharpCaster.Console.Services;
 
-public class MemoryLogService
-{
+public class MemoryLogService {
     private readonly ConcurrentQueue<LogEntry> _logs = new();
     private readonly int _maxLogs;
 
-    public MemoryLogService(int maxLogs = 500)
-    {
+    public MemoryLogService(int maxLogs = 500) {
         _maxLogs = maxLogs;
     }
 
-    public void AddLog(LogLevel level, string category, string message, Exception? exception = null)
-    {
-        var entry = new LogEntry
-        {
+    public void AddLog(LogLevel level, string category, string message, Exception? exception = null) {
+        var entry = new LogEntry {
             Timestamp = DateTime.Now,
             Level = level,
             Category = category,
@@ -25,48 +21,40 @@ public class MemoryLogService
         };
 
         _logs.Enqueue(entry);
-        
-        while (_logs.Count > _maxLogs)
-        {
+
+        while (_logs.Count > _maxLogs) {
             _logs.TryDequeue(out _);
         }
     }
 
-    public IReadOnlyList<LogEntry> GetLogs()
-    {
+    public IReadOnlyList<LogEntry> GetLogs() {
         return _logs.ToList();
     }
 
-    public IReadOnlyList<LogEntry> GetLogs(LogLevel minLevel)
-    {
+    public IReadOnlyList<LogEntry> GetLogs(LogLevel minLevel) {
         return _logs.Where(log => log.Level >= minLevel).ToList();
     }
 
-    public IReadOnlyList<LogEntry> GetRecentLogs(int count)
-    {
+    public IReadOnlyList<LogEntry> GetRecentLogs(int count) {
         return _logs.TakeLast(count).ToList();
     }
 
-    public void ClearLogs()
-    {
+    public void ClearLogs() {
         while (_logs.TryDequeue(out _)) { }
     }
 
     public int Count => _logs.Count;
 }
 
-public class LogEntry
-{
+public class LogEntry {
     public DateTime Timestamp { get; set; }
     public LogLevel Level { get; set; }
     public string Category { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
     public Exception? Exception { get; set; }
 
-    public string GetLevelDisplay()
-    {
-        return Level switch
-        {
+    public string GetLevelDisplay() {
+        return Level switch {
             LogLevel.Trace => "TRC",
             LogLevel.Debug => "DBG",
             LogLevel.Information => "INF",
@@ -78,10 +66,8 @@ public class LogEntry
         };
     }
 
-    public string GetLevelColor()
-    {
-        return Level switch
-        {
+    public string GetLevelColor() {
+        return Level switch {
             LogLevel.Trace => "dim",
             LogLevel.Debug => "blue",
             LogLevel.Information => "white",
@@ -93,50 +79,41 @@ public class LogEntry
     }
 }
 
-public class MemoryLoggerProvider : ILoggerProvider
-{
+public class MemoryLoggerProvider : ILoggerProvider {
     private readonly ConcurrentDictionary<string, MemoryLogger> _loggers = new();
     private readonly MemoryLogService _memoryLogService;
 
-    public MemoryLoggerProvider(MemoryLogService memoryLogService)
-    {
+    public MemoryLoggerProvider(MemoryLogService memoryLogService) {
         _memoryLogService = memoryLogService;
     }
 
-    public ILogger CreateLogger(string categoryName)
-    {
+    public ILogger CreateLogger(string categoryName) {
         return _loggers.GetOrAdd(categoryName, name => new MemoryLogger(name, _memoryLogService));
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         _loggers.Clear();
     }
 }
 
-public class MemoryLogger : ILogger
-{
+public class MemoryLogger : ILogger {
     private readonly string _categoryName;
     private readonly MemoryLogService _memoryLogService;
 
-    public MemoryLogger(string categoryName, MemoryLogService memoryLogService)
-    {
+    public MemoryLogger(string categoryName, MemoryLogService memoryLogService) {
         _categoryName = categoryName;
         _memoryLogService = memoryLogService;
     }
 
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
-    {
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull {
         return null;
     }
 
-    public bool IsEnabled(LogLevel logLevel)
-    {
+    public bool IsEnabled(LogLevel logLevel) {
         return logLevel >= LogLevel.Trace;
     }
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-    {
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) {
         if (!IsEnabled(logLevel))
             return;
 

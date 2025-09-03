@@ -1,7 +1,6 @@
 namespace SharpCaster.Console.Models;
 
-public class CommandLineArgs
-{
+public class CommandLineArgs {
     public string? DeviceName { get; set; }
     public string? DeviceIpAddress { get; set; }
     public string? Command { get; set; }
@@ -16,40 +15,35 @@ public class CommandLineArgs
     public bool IsInteractive => string.IsNullOrEmpty(Command);
 }
 
-public static class CommandLineParser
-{
-    public static CommandLineArgs Parse(string[] args)
-    {
+public static class CommandLineParser {
+    public static CommandLineArgs Parse(string[] args) {
         var result = new CommandLineArgs();
-        
-        if (args.Length == 0)
-        {
+
+        if (args.Length == 0) {
             return result; // Interactive mode
         }
 
-        for (int i = 0; i < args.Length; i++)
-        {
+        for (int i = 0; i < args.Length; i++) {
             var arg = args[i].ToLowerInvariant();
-            
-            switch (arg)
-            {
+
+            switch (arg) {
                 case "-h":
                 case "--help":
                 case "help":
                     result.ShowHelp = true;
                     return result;
-                    
+
                 case "--version":
                 case "-v":
                 case "version":
                     result.ShowVersion = true;
                     return result;
-                    
+
                 case "--list-devices":
                 case "list":
                     result.ShowDevices = true;
                     break;
-                    
+
                 case "play":
                 case "pause":
                 case "stop":
@@ -58,88 +52,76 @@ public static class CommandLineParser
                 case "website":
                     result.Command = arg;
                     break;
-                    
+
                 case "cast":
                     result.Command = "play";
                     break;
-                    
+
                 case "volume":
                 case "vol":
                     result.Command = "volume";
                     break;
-                    
+
                 case "seek":
                     result.Command = "seek";
                     break;
-                    
+
                 case "--ip":
                 case "-i":
-                    if (i + 1 < args.Length)
-                    {
+                    if (i + 1 < args.Length) {
                         result.DeviceIpAddress = args[++i];
                     }
                     break;
-                    
+
                 case "--title":
                 case "-t":
-                    if (i + 1 < args.Length)
-                    {
+                    if (i + 1 < args.Length) {
                         result.MediaTitle = args[++i];
                     }
                     break;
-                    
+
                 case "--logs":
                 case "-l":
                     result.ShowLogs = true;
                     break;
-                    
+
                 default:
                     // Check if this is a numeric argument for volume or seek
-                    if (double.TryParse(args[i], out double numericValue))
-                    {
-                        if (result.Command == "volume" && !result.Volume.HasValue)
-                        {
+                    if (double.TryParse(args[i], out double numericValue)) {
+                        if (result.Command == "volume" && !result.Volume.HasValue) {
                             result.Volume = numericValue;
-                        }
-                        else if (result.Command == "seek" && !result.SeekTime.HasValue)
-                        {
+                        } else if (result.Command == "seek" && !result.SeekTime.HasValue) {
                             result.SeekTime = numericValue;
                         }
                     }
                     // First non-command argument is device name
-                    else if (string.IsNullOrEmpty(result.DeviceName) && !arg.StartsWith("-") && !IsUrl(arg))
-                    {
+                    else if (string.IsNullOrEmpty(result.DeviceName) && !arg.StartsWith("-") && !IsUrl(arg)) {
                         result.DeviceName = args[i]; // Use original case
                     }
                     // URLs are media URLs
-                    else if (IsUrl(arg))
-                    {
+                    else if (IsUrl(arg)) {
                         result.MediaUrl = args[i]; // Use original case
-                        if (string.IsNullOrEmpty(result.Command))
-                        {
+                        if (string.IsNullOrEmpty(result.Command)) {
                             result.Command = "play"; // Default to play when URL is provided
                         }
                     }
                     break;
             }
         }
-        
+
         return result;
     }
-    
-    private static bool IsUrl(string value)
-    {
-        return Uri.TryCreate(value, UriKind.Absolute, out var uri) && 
+
+    private static bool IsUrl(string value) {
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
                (uri.Scheme == "http" || uri.Scheme == "https");
     }
-    
-    private static bool IsIPAddress(string value)
-    {
+
+    private static bool IsIPAddress(string value) {
         return System.Net.IPAddress.TryParse(value, out _);
     }
-    
-    public static void ShowHelp()
-    {
+
+    public static void ShowHelp() {
         System.Console.WriteLine();
         System.Console.WriteLine("sharpcaster - Command Line Usage");
         System.Console.WriteLine();
@@ -216,38 +198,30 @@ public static class CommandLineParser
         System.Console.WriteLine();
     }
 
-    public static void ShowVersion()
-    {
+    public static void ShowVersion() {
         var assembly = System.Reflection.Assembly.GetExecutingAssembly();
         var version = assembly.GetName().Version?.ToString() ?? "Unknown";
-        
+
         // For single-file apps, use AppContext.BaseDirectory instead of Assembly.Location
         var buildDate = DateTime.Now; // Default fallback
-        try
-        {
+        try {
 #pragma warning disable IL3000 // Assembly.Location is accessed - handled with fallback for single-file apps
             var location = assembly.Location;
 #pragma warning restore IL3000
-            if (!string.IsNullOrEmpty(location))
-            {
+            if (!string.IsNullOrEmpty(location)) {
                 buildDate = System.IO.File.GetLastWriteTime(location);
-            }
-            else
-            {
+            } else {
                 // Single-file app - try to get build date from base directory
                 var baseDir = System.AppContext.BaseDirectory;
                 var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-                if (!string.IsNullOrEmpty(exePath) && System.IO.File.Exists(exePath))
-                {
+                if (!string.IsNullOrEmpty(exePath) && System.IO.File.Exists(exePath)) {
                     buildDate = System.IO.File.GetLastWriteTime(exePath);
                 }
             }
-        }
-        catch
-        {
+        } catch {
             // Fallback to current time if we can't determine build date
         }
-        
+
         System.Console.WriteLine($"sharpcaster v{version}");
         System.Console.WriteLine($"Build Date: {buildDate:yyyy-MM-dd HH:mm:ss}");
         System.Console.WriteLine($"Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}");

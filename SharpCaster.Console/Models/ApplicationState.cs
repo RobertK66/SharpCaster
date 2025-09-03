@@ -4,8 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SharpCaster.Console.Models;
 
-public class ApplicationState
-{
+public class ApplicationState {
     public List<ChromecastReceiver> Devices { get; set; } = new();
     public ChromecastReceiver? SelectedDevice { get; set; }
     public ChromecastClient? Client { get; set; }
@@ -13,5 +12,5 @@ public class ApplicationState
     public DateTime LastConnectionCheck { get; set; }
     public ILogger? Logger { get; set; }
     public ChromecastLocator? Locator { get; set; }
-    
+
 }

@@ -7,8 +7,7 @@ using SharpCaster.Console.UI;
 
 namespace SharpCaster.Console.Flows;
 
-public class ApplicationFlows
-{
+public class ApplicationFlows {
     private readonly ApplicationState _state;
     private readonly DeviceService _deviceService;
     private readonly MediaController _mediaController;
@@ -22,8 +21,7 @@ public class ApplicationFlows
         MediaController mediaController,
         QueueController queueController,
         LogViewerService logViewerService,
-        UIHelper ui)
-    {
+        UIHelper ui) {
         _state = state;
         _deviceService = deviceService;
         _mediaController = mediaController;
@@ -32,10 +30,8 @@ public class ApplicationFlows
         _ui = ui;
     }
 
-    public async Task InitialDiscoveryFlowAsync()
-    {
-        while (_state.Devices.Count == 0)
-        {
+    public async Task InitialDiscoveryFlowAsync() {
+        while (_state.Devices.Count == 0) {
             _ui.AddSeparator("🔍 Device Discovery");
             AnsiConsole.MarkupLine("[yellow]Let's start by finding Chromecast devices on your network...[/]");
             AnsiConsole.WriteLine();
@@ -44,44 +40,35 @@ public class ApplicationFlows
                 new SelectionPrompt<string>()
                     .Title("[yellow]What would you like to do?[/]")
                     .AddChoices(new[] { "Search for devices", "Exit application" })
-                    .UseConverter(choice => choice switch
-                    {
+                    .UseConverter(choice => choice switch {
                         "Search for devices" => "🔍 Search for Chromecast devices",
                         "Exit application" => "❌ Exit application",
                         _ => choice
                     }));
 
-            if (discoveryChoice == "Exit application")
-            {
+            if (discoveryChoice == "Exit application") {
                 await CleanupAsync();
                 return;
-            }
-            else
-            {
+            } else {
                 await _deviceService.DiscoverDevicesAsync();
-                
-                if (_state.Devices.Count == 0)
-                {
+
+                if (_state.Devices.Count == 0) {
                     _ui.AddSeparator("❌ No Devices Found");
-                    if (AnsiConsole.Confirm("[yellow]No devices found. Would you like to search again?[/]"))
-                    {
+                    if (AnsiConsole.Confirm("[yellow]No devices found. Would you like to search again?[/]")) {
                         continue;
-                    }
-                    else
-                    {
+                    } else {
                         AnsiConsole.MarkupLine("[red]Exiting - no devices available.[/]");
                         await CleanupAsync();
                         return;
                     }
                 }
-                
+
                 _ui.AddSeparator("Searching again...");
             }
         }
     }
 
-    public async Task DeviceSelectionFlowAsync()
-    {
+    public async Task DeviceSelectionFlowAsync() {
         if (_state.Devices.Count == 0) return;
 
         _ui.AddSeparator("🔗 Device Selection");
@@ -91,16 +78,14 @@ public class ApplicationFlows
         // Show devices in a nice table
         _ui.DisplayDevicesTable();
 
-        while (!_state.IsConnected)
-        {
+        while (!_state.IsConnected) {
             var choices = new List<string>();
-            
+
             // Add device options
-            for (int i = 0; i < _state.Devices.Count; i++)
-            {
+            for (int i = 0; i < _state.Devices.Count; i++) {
                 choices.Add($"{i + 1}. {_state.Devices[i].Name}");
             }
-            
+
             // Add other options
             choices.AddRange(new[] { "Search for more devices", "Exit application" });
 
@@ -109,25 +94,21 @@ public class ApplicationFlows
                     .Title("[yellow]Choose a device to connect to:[/]")
                     .PageSize(10)
                     .AddChoices(choices)
-                    .UseConverter(choice => choice switch
-                    {
+                    .UseConverter(choice => choice switch {
                         var c when c.StartsWith("Search") => "🔍 Search for more devices",
                         var c when c.StartsWith("Exit") => "❌ Exit application",
                         _ => $"📺 {choice}"
                     }));
 
-            if (choice == "Exit application")
-            {
+            if (choice == "Exit application") {
                 await CleanupAsync();
                 return;
             }
-            
-            if (choice == "Search for more devices")
-            {
+
+            if (choice == "Search for more devices") {
                 _ui.AddSeparator("Searching for additional devices...");
                 await _deviceService.DiscoverDevicesAsync();
-                if (_state.Devices.Count > 0)
-                {
+                if (_state.Devices.Count > 0) {
                     AnsiConsole.WriteLine();
                     _ui.DisplayDevicesTable();
                 }
@@ -136,22 +117,16 @@ public class ApplicationFlows
 
             // Connect to selected device
             var choiceParts = choice.Split('.');
-            if (choiceParts.Length > 0)
-            {
-                if (int.TryParse(choiceParts[0], out int deviceIndex) && deviceIndex <= _state.Devices.Count)
-                {
+            if (choiceParts.Length > 0) {
+                if (int.TryParse(choiceParts[0], out int deviceIndex) && deviceIndex <= _state.Devices.Count) {
                     _state.SelectedDevice = _state.Devices[deviceIndex - 1];
                     await _deviceService.ConnectToDeviceAsync();
-                    
-                    if (!_state.IsConnected)
-                    {
+
+                    if (!_state.IsConnected) {
                         AnsiConsole.WriteLine();
-                        if (AnsiConsole.Confirm("[yellow]Would you like to try connecting to a different device?[/]"))
-                        {
+                        if (AnsiConsole.Confirm("[yellow]Would you like to try connecting to a different device?[/]")) {
                             continue;
-                        }
-                        else
-                        {
+                        } else {
                             await CleanupAsync();
                             return;
                         }
@@ -161,31 +136,25 @@ public class ApplicationFlows
         }
     }
 
-    public async Task MainApplicationFlowAsync()
-    {
+    public async Task MainApplicationFlowAsync() {
         if (!_state.IsConnected || _state.SelectedDevice == null) return;
 
         _ui.AddSeparator("Ready to control your device!");
         _ui.ShowConnectedHeader();
 
-        while (true)
-        {
+        while (true) {
             await _deviceService.CheckConnectionHealthAsync();
-            
-            if (!_state.IsConnected)
-            {
+
+            if (!_state.IsConnected) {
                 _ui.AddSeparator("⚠️ Connection Issue Detected");
                 AnsiConsole.MarkupLine("[red]⚠️  Lost connection to device. Let's reconnect...[/]");
                 await Task.Delay(1500);
                 _ui.AddSeparator("Attempting to reconnect...");
                 await DeviceSelectionFlowAsync();
-                if (_state.IsConnected)
-                {
+                if (_state.IsConnected) {
                     _ui.AddSeparator("Connected!");
                     continue;
-                }
-                else
-                {
+                } else {
                     return;
                 }
             }
@@ -196,7 +165,7 @@ public class ApplicationFlows
                 "Website display",
                 "Media controls",
                 "Stop application",
-                "Queue management", 
+                "Queue management",
                 "Device status",
                 "View logs",
                 "Connect to different device",
@@ -209,8 +178,7 @@ public class ApplicationFlows
                     .Title($"[yellow]What would you like to do with {_state.SelectedDevice?.Name}?[/]")
                     .PageSize(10)
                     .AddChoices(choices)
-                    .UseConverter(choice => choice switch
-                    {
+                    .UseConverter(choice => choice switch {
                         "Cast media" => "📺 Cast media",
                         "Website display" => "🌐 Website display",
                         "Media controls" => "🎮 Media controls",
@@ -226,8 +194,7 @@ public class ApplicationFlows
 
             _ui.AddSeparator();
 
-            switch (choice)
-            {
+            switch (choice) {
                 case "Cast media":
                     _ui.AddSeparator("🎬 Casting Media");
                     await _mediaController.CastMediaAsync();
@@ -263,12 +230,9 @@ public class ApplicationFlows
                     _state.SelectedDevice = null;
                     _ui.AddSeparator("Switching to different device...");
                     await DeviceSelectionFlowAsync();
-                    if (_state.IsConnected)
-                    {
+                    if (_state.IsConnected) {
                         _ui.AddSeparator("Connected to new device!");
-                    }
-                    else
-                    {
+                    } else {
                         return;
                     }
                     break;
@@ -281,12 +245,9 @@ public class ApplicationFlows
                     _ui.AddSeparator("Searching for new devices...");
                     await InitialDiscoveryFlowAsync();
                     await DeviceSelectionFlowAsync();
-                    if (_state.IsConnected)
-                    {
+                    if (_state.IsConnected) {
                         _ui.AddSeparator("Connected!");
-                    }
-                    else
-                    {
+                    } else {
                         return;
                     }
                     break;
@@ -295,30 +256,24 @@ public class ApplicationFlows
                     return;
             }
 
-            if (_state.IsConnected)
-            {
+            if (_state.IsConnected) {
                 AnsiConsole.WriteLine();
                 _ui.AddSeparator();
             }
         }
     }
 
-    private Task CleanupAsync()
-    {
+    private Task CleanupAsync() {
         AnsiConsole.MarkupLine("[yellow]👋 Disconnecting and cleaning up...[/]");
-        
-        if (_state.Client != null)
-        {
-            try
-            {
+
+        if (_state.Client != null) {
+            try {
                 _state.Client.Dispose();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 _state.Logger?.LogError(ex, "Error during cleanup");
             }
         }
-        
+
         _state.Locator?.Dispose();
         AnsiConsole.MarkupLine("[green]Goodbye! Thanks for using SharpCaster Console Controller.[/]");
         return Task.CompletedTask;

@@ -40,14 +40,14 @@ namespace Sharpcaster.Converters
             var json = root.GetRawText();
             var typeInfo = options?.GetTypeInfo(targetType) ?? throw new JsonException($"No JsonTypeInfo registered for {targetType.FullName}");
             var result = JsonSerializer.Deserialize(json, typeInfo);
-            return (MediaMetadata)(result ?? throw new JsonException($"Failed to deserialize {targetType.Name}"));
+            return (MediaMetadata)( result ?? throw new JsonException($"Failed to deserialize {targetType.Name}") );
         }
 
         public override void Write(Utf8JsonWriter writer, MediaMetadata value, JsonSerializerOptions options)
         {
             // Serialize using the runtime type for correct shape without reflection-based overloads
-            var runtimeType = (value?.GetType()) ?? throw new JsonException("Cannot serialize null MediaMetadata");
-            var typeInfo = (options?.GetTypeInfo(runtimeType)) ?? throw new JsonException($"No JsonTypeInfo registered for {runtimeType.FullName}");
+            var runtimeType = ( value?.GetType() ) ?? throw new JsonException("Cannot serialize null MediaMetadata");
+            var typeInfo = ( options?.GetTypeInfo(runtimeType) ) ?? throw new JsonException($"No JsonTypeInfo registered for {runtimeType.FullName}");
             JsonSerializer.Serialize(writer, value, typeInfo);
         }
     }

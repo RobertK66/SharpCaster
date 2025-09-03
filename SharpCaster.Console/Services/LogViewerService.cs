@@ -3,19 +3,15 @@ using Spectre.Console;
 
 namespace SharpCaster.Console.Services;
 
-public class LogViewerService
-{
+public class LogViewerService {
     private readonly MemoryLogService _memoryLogService;
 
-    public LogViewerService(MemoryLogService memoryLogService)
-    {
+    public LogViewerService(MemoryLogService memoryLogService) {
         _memoryLogService = memoryLogService;
     }
 
-    public async Task ShowLogViewerAsync()
-    {
-        while (true)
-        {
+    public async Task ShowLogViewerAsync() {
+        while (true) {
             var choices = new[]
             {
                 "View all logs",
@@ -33,8 +29,7 @@ public class LogViewerService
                     .Title("[yellow]Log Viewer Options[/]")
                     .PageSize(10)
                     .AddChoices(choices)
-                    .UseConverter(choice => choice switch
-                    {
+                    .UseConverter(choice => choice switch {
                         "View all logs" => "📋 View all logs",
                         "View recent logs (last 20)" => "🕐 View recent logs (last 20)",
                         "View by log level" => "🎯 View by log level",
@@ -46,8 +41,7 @@ public class LogViewerService
                         _ => choice
                     }));
 
-            switch (choice)
-            {
+            switch (choice) {
                 case "View all logs":
                     DisplayLogs(_memoryLogService.GetLogs());
                     break;
@@ -73,8 +67,7 @@ public class LogViewerService
                     return;
             }
 
-            if (choice != "Back to main menu" && choice != "Auto-refresh view")
-            {
+            if (choice != "Back to main menu" && choice != "Auto-refresh view") {
                 AnsiConsole.WriteLine();
                 AnsiConsole.MarkupLine("[dim]Press any key to continue...[/]");
                 System.Console.ReadKey(true);
@@ -82,10 +75,8 @@ public class LogViewerService
         }
     }
 
-    private void DisplayLogs(IReadOnlyList<LogEntry> logs)
-    {
-        if (logs.Count == 0)
-        {
+    private void DisplayLogs(IReadOnlyList<LogEntry> logs) {
+        if (logs.Count == 0) {
             AnsiConsole.MarkupLine("[yellow]No logs to display.[/]");
             return;
         }
@@ -96,12 +87,11 @@ public class LogViewerService
         table.AddColumn(new TableColumn("[bold]Category[/]").Width(30));
         table.AddColumn(new TableColumn("[bold]Message[/]"));
 
-        foreach (var log in logs)
-        {
+        foreach (var log in logs) {
             var timeStr = log.Timestamp.ToString("HH:mm:ss.fff");
             var levelStr = $"[{log.GetLevelColor()}]{log.GetLevelDisplay()}[/]";
             var categoryStr = TruncateString(log.Category, 28);
-            var messageStr = log.Exception != null 
+            var messageStr = log.Exception != null
                 ? $"{log.Message} [red]({log.Exception.GetType().Name})[/]"
                 : log.Message;
 
@@ -112,12 +102,11 @@ public class LogViewerService
         AnsiConsole.MarkupLine($"\n[dim]Showing {logs.Count} log entries[/]");
     }
 
-    private async Task ViewByLogLevelAsync()
-    {
+    private async Task ViewByLogLevelAsync() {
         var levelChoices = new[]
         {
             "Debug and above",
-            "Information and above", 
+            "Information and above",
             "Warning and above",
             "Error and above",
             "Critical only"
@@ -128,8 +117,7 @@ public class LogViewerService
                 .Title("[yellow]Select minimum log level:[/]")
                 .AddChoices(levelChoices));
 
-        var minLevel = choice switch
-        {
+        var minLevel = choice switch {
             "Debug and above" => LogLevel.Debug,
             "Information and above" => LogLevel.Information,
             "Warning and above" => LogLevel.Warning,
@@ -142,12 +130,11 @@ public class LogViewerService
         DisplayLogs(filteredLogs);
     }
 
-    private async Task SearchLogsAsync()
-    {
+    private async Task SearchLogsAsync() {
         var searchTerm = AnsiConsole.Ask<string>("[yellow]Enter search term:[/]");
-        
+
         var allLogs = _memoryLogService.GetLogs();
-        var filteredLogs = allLogs.Where(log => 
+        var filteredLogs = allLogs.Where(log =>
             log.Message.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
             log.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
             .ToList();
@@ -156,48 +143,39 @@ public class LogViewerService
         DisplayLogs(filteredLogs);
     }
 
-    private async Task ClearLogsAsync()
-    {
-        if (AnsiConsole.Confirm("[yellow]Are you sure you want to clear all logs?[/]"))
-        {
+    private async Task ClearLogsAsync() {
+        if (AnsiConsole.Confirm("[yellow]Are you sure you want to clear all logs?[/]")) {
             _memoryLogService.ClearLogs();
             AnsiConsole.MarkupLine("[green]All logs cleared.[/]");
         }
     }
 
-    private async Task ExportLogsAsync()
-    {
+    private async Task ExportLogsAsync() {
         var fileName = AnsiConsole.Ask("[yellow]Enter filename (without extension):[/]", "sharpcaster-logs");
         var fullPath = Path.Combine(Environment.CurrentDirectory, $"{fileName}.txt");
 
-        try
-        {
+        try {
             var logs = _memoryLogService.GetLogs();
-            var lines = logs.Select(log => 
+            var lines = logs.Select(log =>
                 $"{log.Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{log.GetLevelDisplay()}] {log.Category}: {log.Message}" +
                 (log.Exception != null ? $" | Exception: {log.Exception}" : ""));
 
             await File.WriteAllLinesAsync(fullPath, lines);
             AnsiConsole.MarkupLine($"[green]Logs exported to: {fullPath}[/]");
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             AnsiConsole.MarkupLine($"[red]Failed to export logs: {ex.Message}[/]");
         }
     }
 
-    private async Task AutoRefreshViewAsync()
-    {
+    private async Task AutoRefreshViewAsync() {
         AnsiConsole.MarkupLine("[yellow]Auto-refresh mode - Press any key to stop[/]");
         AnsiConsole.WriteLine();
 
         var cts = new CancellationTokenSource();
         var keyTask = Task.Run(() => { System.Console.ReadKey(true); cts.Cancel(); });
 
-        try
-        {
-            while (!cts.Token.IsCancellationRequested)
-            {
+        try {
+            while (!cts.Token.IsCancellationRequested) {
                 AnsiConsole.Clear();
                 AnsiConsole.MarkupLine("[bold yellow]📊 Live Log View[/]");
                 AnsiConsole.MarkupLine("[dim]Press any key to stop auto-refresh[/]");
@@ -206,18 +184,13 @@ public class LogViewerService
                 var recentLogs = _memoryLogService.GetRecentLogs(15);
                 DisplayLogs(recentLogs);
 
-                try
-                {
+                try {
                     await Task.Delay(2000, cts.Token);
-                }
-                catch (OperationCanceledException)
-                {
+                } catch (OperationCanceledException) {
                     break;
                 }
             }
-        }
-        finally
-        {
+        } finally {
             cts.Cancel();
             await keyTask;
         }
@@ -225,11 +198,10 @@ public class LogViewerService
         AnsiConsole.MarkupLine("[green]Auto-refresh stopped.[/]");
     }
 
-    private static string TruncateString(string input, int maxLength)
-    {
+    private static string TruncateString(string input, int maxLength) {
         if (input.Length <= maxLength)
             return input;
-        
+
         return input.Substring(0, maxLength - 3) + "...";
     }
 }

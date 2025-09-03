@@ -21,7 +21,7 @@ namespace Sharpcaster.Messages
             var result = "";
             // Convert the type name to uppercase with underscores
             // example: "ReceiverStatusMessage" -> "RECEIVER_STATUS"
-            for (int i = 0; i < type.Length; i++)
+            for (int i = 0 ;i < type.Length ;i++)
             {
                 var c = type[i];
                 if (firstCharacter)
