@@ -186,12 +186,21 @@ namespace SharpCaster.Console.Controllers;
                         break;
 
                     case "Next track":
-                        await AnsiConsole.Status().StartAsync("Skipping to next track...", async ctx =>
+                        var ids = await mediaChannel.QueueGetItemIdsAsync();
+
+                        if (ids?.LastOrDefault() == mediaChannel.MediaStatus?.CurrentItemId)
                         {
-                            await mediaChannel.QueueNextAsync();
-                        });
-                        AnsiConsole.MarkupLine("[green]⏭️ Skipped to next track[/]");
-                        _ui.AddSeparator();
+                            AnsiConsole.MarkupLine("[yellow]⚠️  Already at the last track in the queue. Cannot skip to next track.[/]");
+                        }
+                        else
+                        {
+                            await AnsiConsole.Status().StartAsync("Skipping to next track...", async ctx =>
+                            {
+                                await mediaChannel.QueueNextAsync();
+                            });
+                            AnsiConsole.MarkupLine("[green]⏭️ Skipped to next track[/]");
+                            _ui.AddSeparator();
+                        }
                         break;
 
                     case "Previous track":
