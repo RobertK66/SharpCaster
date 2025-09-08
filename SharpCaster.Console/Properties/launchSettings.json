@@ -10,6 +10,10 @@
     "Console - BS9": {
       "commandName": "Project",
       "commandLineArgs": "\"My JBL Speaker\" play beethoven-s9"
+    },
+    "Profile 1": {
+      "commandName": "Project",
+      "commandLineArgs": "\"My JBL Speaker\" play \"Sample Audio\""
     }
   }
 }

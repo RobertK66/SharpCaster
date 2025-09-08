@@ -11,156 +11,39 @@ using System.Xml.Linq;
 
 namespace SharpCaster.Console.Controllers;
 
-
-public class Node
-{
-    public Node(string name)
-    {
-        Name = name;
-    }
-
-    public String Name { get; set; }
-    public object? Data { get; set; }
-
-}
-
-public class QueueController
+    public class QueueController
 {
     private readonly ApplicationState _state;
     private readonly DeviceService _deviceService;
     private readonly UIHelper _ui;
-    private readonly PlaylistService _playlist;
+    private readonly PlaylistService _playlistService;
 
     public QueueController(ApplicationState state, DeviceService deviceService, UIHelper ui, IConfiguration config, PlaylistService ps)
     {
         _state = state;
         _deviceService = deviceService;
         _ui = ui;
-        _playlist = ps;
-        //_playlistTree = new Node("root");
-        //var _playlists = config.GetSection("Playlists");
-        //AddPlaylists(_playlistTree, _playlists);
+        _playlistService = ps;
     }
-
-    //private void AddPlaylists(Node parent, IConfigurationSection playlists)
-    //{
-    //    List<Node> children = new List<Node>();
-    //    var subsections = playlists.GetChildren();
-
-    //    foreach (var section in subsections)
-    //    {
-    //        var data = section.GetChildren().FirstOrDefault();
-    //        if (data != null && data.Key.Equals("0"))
-    //        {
-    //            // This section only contains numbered items -> array of objects(Media)
-    //            var playlist = new Node(section.Key);
-    //            List<Media> tracks = new List<Media>();
-
-    //            // This works also but it is not easy to add meaningfull warnings if something is typed wrong in application.json
-    //            //List<Media>? tracks = mediaArray.Select(configSection =>
-    //            //        new Media()
-    //            //        {
-    //            //            ContentUrl = configSection["ContentUrl"]!.ToString(),
-    //            //            Metadata = new MediaMetadata() { Title = configSection["Title"]!.ToString() }
-    //            //        })?.ToList();
-
-    //            var mediaArray = section.GetChildren();
-    //            var e = mediaArray.GetEnumerator();
-    //            while(e.MoveNext()) {
-    //                var media = new Media();
-    //                var keyValues = e.Current.GetChildren().AsEnumerable();
-    //                foreach (var kv in keyValues)
-    //                {
-    //                    switch (kv.Key)
-    //                    {
-    //                        case "ContentId":
-    //                            media.ContentId = kv.Value?.ToString();
-    //                            break;
-    //                        case "ContentUrl":
-    //                            media.ContentUrl = kv.Value?.ToString();
-    //                            break;
-    //                        case "ContentType":
-    //                            media.ContentType = kv.Value?.ToString();
-    //                            break;
-    //                        case "StreamType":
-    //                            if (Enum.TryParse<StreamType>(kv.Value?.ToString(), true, out var streamType))
-    //                            {
-    //                                media.StreamType = streamType;
-    //                            }
-    //                            else
-    //                            {
-    //                                media.StreamType = StreamType.Buffered;
-    //                            }
-    //                            break;
-    //                        case "Title":
-    //                            media.Metadata = media.Metadata ?? new MediaMetadata();
-    //                            media.Metadata.Title = kv.Value?.ToString();
-    //                            break;
-    //                        case "SubTitle":
-    //                            media.Metadata = media.Metadata ?? new MediaMetadata();
-    //                            media.Metadata.SubTitle = kv.Value?.ToString();
-    //                            break;
-    //                        case "Duration":
-    //                            if (double.TryParse(kv.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var duration))
-    //                            {
-    //                                media.Duration = duration;
-    //                            }
-    //                            break;
-    //                        default:
-    //                            AnsiConsole.MarkupLine("[yellow]⚠️  Warning: Unknown key in configuration (playlist: "+ playlist.Name + " ) item: [/]" + kv.Key);
-    //                            break;
-    //                    }
-    //                }
-    //                if (media.ContentUrl == null && media.ContentId == null)
-    //                {
-    //                    AnsiConsole.MarkupLine("[yellow]⚠️  Warning: Skipping media item with no ContentUrl or ContentId in playlist: [/]" + playlist.Name);
-    //                }
-    //                else
-    //                {
-    //                    tracks.Add(media);
-    //                }
-    //            }
-
-
-    //            //List<Media>? t = mediaArray.Select(configSection =>
-    //            //        new Media()
-    //            //        {
-    //            //            ContentUrl = configSection["ContentUrl"]!.ToString(),
-    //            //            Metadata = new MediaMetadata() { Title = configSection["Title"]!.ToString() }
-    //            //        })?.ToList();
-
-    //            playlist.Data = tracks;
-    //            children.Add(playlist);
-    //        }
-    //        else
-    //        {
-    //            // This section contains subsections -> create a new node and recurse
-    //            var container = new Node(section.Key);
-    //            children.Add(container);
-    //            AddPlaylists(container, section);
-    //        }
-    //    }
-    //    parent.Data = children;
-    //}
 
     public async Task CastPlaylistAsync()
     {
         if (!await _deviceService.EnsureConnectedAsync())
             return;
 
-        if (!_playlist.HasContent())
+        if (!_playlistService.HasContent())
         {
             AnsiConsole.MarkupLine("[red]❌ No playlists configured. Please add playlists to the configuration.[/]");
             return;
         }
 
-        Node currentNode = _playlist.GetRoot();
+        MenuNode currentNode = _playlistService.GetRoot();
         while (true)
         {
             List<string> urlOptions = new();
-            if (currentNode?.Data is List<Node> lineNodes)
+            if (currentNode is Category category)
             {
-                urlOptions = lineNodes.Select(c => c.Name).ToList();
+                urlOptions = category.Content.Select(c => c.Name).ToList();
                 urlOptions.Add("Back");
 
                 var urlChoice = AnsiConsole.Prompt(
@@ -179,19 +62,19 @@ public class QueueController
                 }
 
                 var queueItems = new List<QueueItem>();
-                var selectedNode = lineNodes.FirstOrDefault(n => n.Name == urlChoice);
+                var selectedNode = category.Content.FirstOrDefault(n => n.Name == urlChoice);
                 if (selectedNode != null)
                 {
-                    if (selectedNode.Data is List<Node>)
+                    if (selectedNode is Category)
                     {
                         // Navigate into the folder
                         currentNode = selectedNode;
                         continue; // Restart the loop to show the new options
                     }
-                    else if (selectedNode.Data is List<Media> mediaList)
+                    else if (selectedNode is Playlist mediaList)
                     {
                         // We have reached a playlist, proceed to cast it
-                        foreach (Media m in mediaList)
+                        foreach (Media m in mediaList.Tracks)
                         {
                             m.StreamType = StreamType.Buffered;
                             m.Metadata = m.Metadata ?? new MediaMetadata() { Title = m.ContentId };
@@ -245,9 +128,9 @@ public class QueueController
         }
     }
 
-    private string GetTypeIconForChoice(Node? currentNode, string choice)
+    private string GetTypeIconForChoice(MenuNode? currentNode, string choice)
     {
-        return currentNode?.Data is List<Node> nodes && nodes.FirstOrDefault(n => n.Name == choice)?.Data is List<Node>
+        return currentNode is Category nodes && nodes.Content.FirstOrDefault(n => n.Name == choice) is Category
             ? "📁 " // Folder icon for categories
             : "💿 "; // Music note icon for playlists
     }
